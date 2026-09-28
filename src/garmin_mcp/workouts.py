@@ -782,7 +782,7 @@ def register_tools(app):
             return f"Error retrieving exercise types: {str(e)}"
 
     @app.tool()
-    async def get_workout_by_id(workout_id: Union[int, str]) -> str:
+    async def get_workout_by_id(workout_id: Union[int, str], raw: bool = False) -> str:
         """Get detailed information for a specific workout
 
         Returns workout details including segments and step structure.
@@ -797,6 +797,8 @@ def register_tools(app):
 
         Args:
             workout_id: Workout ID (numeric) or UUID (for training plan workouts)
+            raw: Return Garmin's full workout JSON instead of the simplified summary.
+                That is the format update_workout takes, so use it to edit a workout.
         """
         try:
             workout_id_str = str(workout_id)
@@ -813,6 +815,9 @@ def register_tools(app):
 
             if not workout:
                 return f"No workout found with ID {workout_id_str}."
+
+            if raw:
+                return json.dumps(workout, indent=2)
 
             # Return curated details with segments
             curated = _curate_workout_details(workout)
@@ -992,7 +997,8 @@ def register_tools(app):
         Garmin replaces the WHOLE workout, so workout_data must be the complete
         structure — same format as upload_workout (see that tool for the full DTO
         reference on steps, targets, sport types, and end conditions). Typical flow:
-        fetch with get_workout_by_id, edit the JSON, pass it here.
+        fetch with get_workout_by_id(raw=True), edit the JSON, pass it here; the
+        default get_workout_by_id output is a simplified summary, not this format.
 
         Args:
             workout_id: ID of the existing workout to overwrite.
