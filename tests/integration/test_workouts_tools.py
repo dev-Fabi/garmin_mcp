@@ -152,19 +152,20 @@ async def test_get_workout_by_id_tool_raw_returns_garmin_json(app_with_workouts,
 
 
 @pytest.mark.asyncio
-async def test_get_workout_by_id_tool_keeps_target_and_pool_units(app_with_workouts, mock_garmin_client):
-    """Target units and pool length survive curation; without them % FTP reads as watts"""
+async def test_get_workout_by_id_tool_keeps_target_units(app_with_workouts, mock_garmin_client):
+    """Target units survive curation; without them a range in % FTP reads as watts"""
     import json as json_module
 
-    power = {"workoutTargetTypeId": 2, "workoutTargetTypeKey": "power.zone"}
-    cadence = {"workoutTargetTypeId": 3, "workoutTargetTypeKey": "cadence"}
-    percent = {"unitId": 30, "unitKey": "percent", "factor": 1.0}
+    # Shapes as Garmin Connect returns them for a workout uploaded with these targets
+    power = {"workoutTargetTypeId": 2, "workoutTargetTypeKey": "power.zone", "displayOrder": 2}
+    cadence = {"workoutTargetTypeId": 3, "workoutTargetTypeKey": "cadence", "displayOrder": 3}
+    percent = {"unitId": 253, "unitKey": "percent", "factor": 1.0}
     mock_garmin_client.get_workout_by_id.return_value = {
         "workoutId": 1,
         "workoutName": "Units",
         "sportType": {"sportTypeId": 2, "sportTypeKey": "cycling"},
-        "poolLength": 50.0,
-        "poolLengthUnit": {"unitId": 1, "unitKey": "meter", "factor": 100.0},
+        "poolLength": None,
+        "poolLengthUnit": None,
         "workoutSegments": [{
             "segmentOrder": 1,
             "sportType": {"sportTypeId": 2, "sportTypeKey": "cycling"},
@@ -201,13 +202,39 @@ async def test_get_workout_by_id_tool_keeps_target_and_pool_units(app_with_worko
     result = await app_with_workouts.call_tool("get_workout_by_id", {"workout_id": 1})
 
     result_data = json_module.loads(result[0][0].text)
-    assert result_data["pool_length"] == 50.0
-    assert result_data["pool_length_unit"] == "meter"
+    assert "pool_length" not in result_data
     power_first, cadence_first = result_data["segments"][0]["steps"]
     assert power_first["target_value_unit"] == "percent"
     assert "secondary_target_value_unit" not in power_first
     assert "target_value_unit" not in cadence_first
     assert cadence_first["secondary_target_value_unit"] == "percent"
+
+
+@pytest.mark.asyncio
+async def test_get_workout_by_id_tool_keeps_pool_length(app_with_workouts, mock_garmin_client):
+    """Pool length is set on the workout, not the segment"""
+    import json as json_module
+
+    mock_garmin_client.get_workout_by_id.return_value = {
+        "workoutId": 1,
+        "workoutName": "Pool",
+        "sportType": {"sportTypeId": 4, "sportTypeKey": "swimming"},
+        "poolLength": 50.0,
+        "poolLengthUnit": {"unitId": 1, "unitKey": "meter", "factor": 100.0},
+        "workoutSegments": [{
+            "segmentOrder": 1,
+            "sportType": {"sportTypeId": 4, "sportTypeKey": "swimming"},
+            "poolLength": None,
+            "poolLengthUnit": None,
+            "workoutSteps": [],
+        }],
+    }
+
+    result = await app_with_workouts.call_tool("get_workout_by_id", {"workout_id": 1})
+
+    result_data = json_module.loads(result[0][0].text)
+    assert result_data["pool_length"] == 50.0
+    assert result_data["pool_length_unit"] == "meter"
 
 
 @pytest.mark.asyncio
