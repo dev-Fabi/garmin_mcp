@@ -175,7 +175,7 @@ Lists Garmin's strength-exercise catalog (~1500 exercises across 47 categories) 
 
 ### `update_workout`
 
-Edits an existing workout in-place, keeping the same workout ID so any calendar schedules stay valid. Full-replace semantics: pass the complete workout structure (same shape as `upload_workout`). `get_workout_by_id` returns a simplified summary, not that shape, so rebuild the workout the way it was uploaded instead of editing its output.
+Edits an existing workout in-place, keeping the same workout ID so any calendar schedules stay valid. Full-replace semantics: pass the complete workout structure (same shape as `upload_workout`). Typical flow: `get_workout_by_id` with `raw=True` → edit the JSON → `update_workout`; without `raw`, `get_workout_by_id` returns a simplified summary, not that shape.
 
 ### `schedule_week`
 
