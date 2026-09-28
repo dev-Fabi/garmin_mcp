@@ -991,8 +991,11 @@ def register_tools(app):
 
         Garmin replaces the WHOLE workout, so workout_data must be the complete
         structure — same format as upload_workout (see that tool for the full DTO
-        reference on steps, targets, sport types, and end conditions). Typical flow:
-        fetch with get_workout_by_id, edit the JSON, pass it here.
+        reference on steps, targets, sport types, and end conditions). Do not pass
+        get_workout_by_id output: that tool returns a simplified summary (e.g.
+        "end_condition": "time", "exercise_name"), not this DTO format. Rebuild the
+        whole workout the way it was uploaded, carrying over every unchanged step.
+        The workout keeps its ID, so calendar entries pointing at it stay valid.
 
         Args:
             workout_id: ID of the existing workout to overwrite.
