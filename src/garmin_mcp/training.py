@@ -42,7 +42,7 @@ def _convert_progress_metric(metric: str, value: Optional[float]) -> Optional[fl
     return value / _PROGRESS_CALORIES_FACTOR
 
 
-# Garmin returns the lactate threshold speed in cm/ms, not seconds/metre:
+# Garmin returns the lactate threshold speed in cm/ms, not seconds/meter:
 # Garmin Connect's web app converts it with CmPerMsToMps = 10 before showing
 # the pace (a raw 0.3888878 is 3.889 m/s, shown as 4:17 min/km). Inverting
 # looked plausible only near ~0.32, where 1/x and 10x are both ~3.1-3.2 m/s.
