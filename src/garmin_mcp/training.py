@@ -42,18 +42,18 @@ def _convert_progress_metric(metric: str, value: Optional[float]) -> Optional[fl
     return value / _PROGRESS_CALORIES_FACTOR
 
 
-# Garmin's lactate threshold speed is in units of 10 m/s, not seconds/metre:
-# a raw 0.38889 is 3.889 m/s, the 4:17 min/km Garmin Connect shows as the
-# threshold pace, while inverting it gives 6:29 min/km. Inverting looked right
-# only near ~0.32, where 1/x and 10x are both close to 3.1-3.2 m/s.
-_LACTATE_THRESHOLD_SPEED_FACTOR = 10
+# Garmin returns the lactate threshold speed in cm/ms, not seconds/metre:
+# Garmin Connect's web app converts it with CmPerMsToMps = 10 before showing
+# the pace (a raw 0.3888878 is 3.889 m/s, shown as 4:17 min/km). Inverting
+# looked plausible only near ~0.32, where 1/x and 10x are both ~3.1-3.2 m/s.
+_CM_PER_MS_TO_MPS = 10
 
 
 def _lactate_threshold_speed_mps(value: Optional[float]) -> Optional[float]:
     """Convert a raw lactate threshold speed to m/s."""
     if not value:
         return None
-    return value * _LACTATE_THRESHOLD_SPEED_FACTOR
+    return value * _CM_PER_MS_TO_MPS
 
 
 def _extract_vo2_measurements(data: Any) -> Dict[str, float]:
